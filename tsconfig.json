@@ -5,7 +5,8 @@
     "paths": {
       "@ngxs/*": ["packages/*"]
     },
-    "noUnusedLocals": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",

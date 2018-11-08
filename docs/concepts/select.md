@@ -264,9 +264,9 @@ export class ZooState {
 }
 ```
 
-When using the `Selector` decorator along with a state class, it will still
-inject the state class's state first followed by the other selectors in the order
-they were passed in the signature.
+> NOTE: When using the `Selector` decorator along with a state class, **it will still
+> inject the state class's state first** followed by the other selectors in the order
+> they were passed in the signature.
 
 ### Meta Selectors
 By default selectors in NGXS are bound to a state. Sometimes you need the ability
