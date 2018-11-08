@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { WebSocketSubject } from './websocket-subject';
-import { Actions, Store, getValue, ofActionDispatched } from '@ngxs/store';
+import { Actions, Store, getValue, ofActionDispatched, IAction } from '@ngxs/store';
 import {
   ConnectWebSocket,
   DisconnectWebSocket,
@@ -13,8 +13,8 @@ import {
 @Injectable()
 export class WebSocketHandler {
   constructor(
-    store: Store,
-    actions: Actions,
+    store: Store<any>,
+    actions: Actions<IAction>,
     socket: WebSocketSubject,
     @Inject(NGXS_WEBSOCKET_OPTIONS) config: NgxsWebsocketPluginOptions
   ) {
@@ -23,7 +23,7 @@ export class WebSocketHandler {
     actions.pipe(ofActionDispatched(SendWebSocketMessage)).subscribe(({ payload }) => socket.send(payload));
     socket.subscribe(
       msg => {
-        const type = getValue(msg, config.typeKey);
+        const type = getValue(msg, config.typeKey!);
         if (!type) {
           throw new Error(`Type ${type} not found on message`);
         }

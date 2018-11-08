@@ -7,15 +7,19 @@ import { RouterStateSerializer } from './serializer';
 import { NgZone } from '@angular/core';
 
 export type RouterStateModel<T = RouterStateSnapshot> = {
-  state: T;
-  navigationId: number;
+  state?: T;
+  navigationId?: number;
 };
+
+export interface GlobalStateWithRouter {
+  router: RouterStateModel;
+}
 
 @State<RouterStateModel>({
   name: 'router',
   defaults: {
-    state: null,
-    navigationId: null
+    state: undefined,
+    navigationId: undefined
   }
 })
 export class RouterState {
@@ -40,7 +44,7 @@ export class RouterState {
   }
 
   constructor(
-    private _store: Store,
+    private _store: Store<GlobalStateWithRouter>,
     private _router: Router,
     private _serializer: RouterStateSerializer<RouterStateSnapshot>,
     private _ngZone: NgZone
@@ -115,7 +119,7 @@ export class RouterState {
 
     if (this._router.url !== this.routerState.state.url) {
       this.navigationTriggeredByDispatch = true;
-      this._ngZone.run(() => this._router.navigateByUrl(this.routerState.state.url));
+      this._ngZone.run(() => this._router.navigateByUrl(this.routerState.state!.url));
     }
   }
 

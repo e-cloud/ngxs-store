@@ -1,3 +1,4 @@
+// tslint:disable:unified-signatures
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, of, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, map, take } from 'rxjs/operators';
@@ -6,13 +7,14 @@ import { getSelectorFn } from './utils/selector-utils';
 import { InternalStateOperations } from './internal/state-operations';
 import { StateStream } from './internal/state-stream';
 import { enterZone } from './operators/zone';
+import { StateClassStatic } from './internal/internals';
 
 @Injectable()
-export class Store {
+export class Store<T> {
   constructor(
     private _ngZone: NgZone,
-    private _stateStream: StateStream,
-    private _internalStateOperations: InternalStateOperations
+    private _stateStream: StateStream<T>,
+    private _internalStateOperations: InternalStateOperations<T>
   ) {}
 
   /**
@@ -25,8 +27,10 @@ export class Store {
   /**
    * Selects a slice of data from the store.
    */
-  select<T>(selector: (state: any, ...states: any[]) => T): Observable<T>;
-  select(selector: string | any): Observable<any>;
+  select<R, K>(selector: (state: T, ...subState: K[]) => R): Observable<R>;
+  select<R, S>(selector: (...states: S[]) => R): Observable<R>;
+  select<R, S>(memorizedSelector: (state: S) => R): Observable<R>;
+  select<R>(selector: string | StateClassStatic): Observable<R>;
   select(selector: any): Observable<any> {
     const selectorFn = getSelectorFn(selector);
     return this._stateStream.pipe(
@@ -48,8 +52,10 @@ export class Store {
   /**
    * Select one slice of data from the store.
    */
-  selectOnce<T>(selector: (state: any, ...states: any[]) => T): Observable<T>;
-  selectOnce(selector: string | any): Observable<any>;
+  selectOnce<R, K>(selector: (state: T, ...subState: K[]) => R): Observable<T>;
+  selectOnce<R>(selector: string | StateClassStatic): Observable<R>;
+  selectOnce<R, S>(selector: (...states: S[]) => R): Observable<R>;
+  selectOnce<R, S>(memorizedSelector: (state: S) => R): Observable<R>;
   selectOnce(selector: any): Observable<any> {
     return this.select(selector).pipe(take(1));
   }
@@ -57,8 +63,10 @@ export class Store {
   /**
    * Select a snapshot from the state.
    */
-  selectSnapshot<T>(selector: (state: any, ...states: any[]) => T): T;
-  selectSnapshot(selector: string | any): any;
+  selectSnapshot<R, K>(selector: (state: T, ...subState: K[]) => R): R;
+  selectSnapshot<R, S>(selector: (...states: S[]) => R): R;
+  selectSnapshot<R, S>(memorizedSelector: (state: S) => R): R;
+  selectSnapshot<R>(selector: string | StateClassStatic): R;
   selectSnapshot(selector: any): any {
     const selectorFn = getSelectorFn(selector);
     return selectorFn(this._stateStream.getValue());
@@ -67,14 +75,14 @@ export class Store {
   /**
    * Allow the user to subscribe to the root of the state
    */
-  subscribe(fn?: any): Subscription {
+  subscribe(fn?: (value: Partial<T>) => void): Subscription {
     return this._stateStream.pipe(enterZone(this._ngZone)).subscribe(fn);
   }
 
   /**
    * Return the raw value of the state.
    */
-  snapshot(): any {
+  snapshot(): T {
     return this._internalStateOperations.getRootStateOperations().getState();
   }
 
@@ -82,7 +90,7 @@ export class Store {
    * Reset the state to a specific point in time. This method is useful
    * for plugin's who need to modify the state directly or unit testing.
    */
-  reset(state: any) {
+  reset(state: T) {
     return this._internalStateOperations.getRootStateOperations().setState(state);
   }
 }

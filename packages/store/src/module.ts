@@ -19,10 +19,10 @@ import { InitState, UpdateState } from './actions/actions';
 @NgModule()
 export class NgxsRootModule {
   constructor(
-    factory: StateFactory,
-    internalStateOperations: InternalStateOperations,
-    store: Store,
-    select: SelectFactory,
+    factory: StateFactory<any>,
+    internalStateOperations: InternalStateOperations<any>,
+    store: Store<any>,
+    select: SelectFactory<any>,
     @Optional()
     @Inject(ROOT_STATE_TOKEN)
     states: any[]
@@ -58,9 +58,9 @@ export class NgxsRootModule {
 @NgModule({})
 export class NgxsFeatureModule {
   constructor(
-    store: Store,
-    internalStateOperations: InternalStateOperations,
-    factory: StateFactory,
+    store: Store<any>,
+    internalStateOperations: InternalStateOperations<any>,
+    factory: StateFactory<any>,
     @Optional()
     @Inject(FEATURE_STATE_TOKEN)
     states: any[][]

@@ -1,17 +1,18 @@
-import { OperatorFunction, Observable } from 'rxjs';
+import { OperatorFunction, Observable, MonoTypeOperatorFunction } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
-import { getActionTypeFromInstance } from '../utils/utils';
+import { getActionTypeFromInstanceOrClass, getActionTypeFromClass } from '../utils/utils';
 import { ActionContext, ActionStatus } from '../actions-stream';
+import { ActionType, IAction } from '../symbols';
 
-export function ofAction<T>(allowedType): OperatorFunction<any, T>;
-export function ofAction<T>(...allowedTypes): OperatorFunction<any, T>;
+export function ofAction<T>(allowedType: ActionType<T>): OperatorFunction<any, T>;
+export function ofAction<T>(...allowedTypes: ActionType<T>[]): OperatorFunction<any, T>;
 
 /**
  * RxJS operator for selecting out specific actions.
  *
  * This will grab actions that have just been dispatched as well as actions that have completed
  */
-export function ofAction(...allowedTypes: any[]) {
+export function ofAction<T>(...allowedTypes: ActionType<T>[]) {
   return ofActionOperator(allowedTypes);
 }
 
@@ -20,7 +21,7 @@ export function ofAction(...allowedTypes: any[]) {
  *
  * This will ONLY grab actions that have just been dispatched
  */
-export function ofActionDispatched(...allowedTypes: any[]) {
+export function ofActionDispatched<T>(...allowedTypes: ActionType<T>[]) {
   return ofActionOperator(allowedTypes, ActionStatus.Dispatched);
 }
 
@@ -29,7 +30,7 @@ export function ofActionDispatched(...allowedTypes: any[]) {
  *
  * This will ONLY grab actions that have just been successfully completed
  */
-export function ofActionSuccessful(...allowedTypes: any[]) {
+export function ofActionSuccessful<T>(...allowedTypes: ActionType<T>[]) {
   return ofActionOperator(allowedTypes, ActionStatus.Successful);
 }
 
@@ -38,7 +39,7 @@ export function ofActionSuccessful(...allowedTypes: any[]) {
  *
  * This will ONLY grab actions that have just been canceled
  */
-export function ofActionCanceled(...allowedTypes: any[]) {
+export function ofActionCanceled<T>(...allowedTypes: ActionType<T>[]) {
   return ofActionOperator(allowedTypes, ActionStatus.Canceled);
 }
 
@@ -47,32 +48,38 @@ export function ofActionCanceled(...allowedTypes: any[]) {
  *
  * This will ONLY grab actions that have just thrown an error
  */
-export function ofActionErrored(...allowedTypes: any[]) {
+export function ofActionErrored<T>(...allowedTypes: ActionType<T>[]) {
   return ofActionOperator(allowedTypes, ActionStatus.Errored);
 }
 
-function ofActionOperator(allowedTypes: any[], status?: ActionStatus) {
+function ofActionOperator<T>(allowedTypes: ActionType<T>[], status?: ActionStatus) {
   const allowedMap = createAllowedMap(allowedTypes);
-  return function(o: Observable<any>) {
-    return o.pipe(filterStatus(allowedMap, status), mapAction());
+  return function(actions: Observable<ActionContext<T>>) {
+    return actions.pipe(
+      filterStatus(allowedMap, status),
+      mapAction<T>()
+    );
   };
 }
 
-function filterStatus(allowedTypes: { [key: string]: boolean }, status?: ActionStatus) {
-  return filter((ctx: ActionContext) => {
-    const actionType = getActionTypeFromInstance(ctx.action);
+function filterStatus(allowedTypes: Record<string, boolean>, status?: ActionStatus) {
+  return filter((ctx: ActionContext<IAction>) => {
+    const actionType = getActionTypeFromInstanceOrClass(ctx.action!)!;
     const type = allowedTypes[actionType];
     return status ? type && ctx.status === status : type;
-  });
+  }) as MonoTypeOperatorFunction<any>;
 }
 
-function mapAction() {
-  return map((ctx: ActionContext) => ctx.action);
+function mapAction<T>() {
+  return map((ctx: ActionContext<T>) => ctx.action!);
 }
 
-function createAllowedMap(types: any[]): { [key: string]: boolean } {
-  return types.reduce((acc: any, klass: any) => {
-    acc[getActionTypeFromInstance(klass)] = true;
-    return acc;
-  }, {});
+function createAllowedMap<T>(types: ActionType<T>[]) {
+  return types.reduce(
+    (acc, klass) => {
+      acc[getActionTypeFromInstanceOrClass(klass)!] = true;
+      return acc;
+    },
+    <Record<string, boolean>>{}
+  );
 }

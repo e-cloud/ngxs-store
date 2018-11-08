@@ -1,6 +1,7 @@
 import { TestBed, async } from '@angular/core/testing';
 import { InternalActions, OrderedSubject, ActionStatus } from '../src/actions-stream';
 import { Subject } from 'rxjs';
+import { IAction } from '../src/symbols';
 
 describe('The Actions stream', () => {
   it('should not use Subject because of the following issue (note that 3rd subscriber receives the events out of order)', async(() => {
@@ -54,7 +55,7 @@ describe('The Actions stream', () => {
       providers: [InternalActions]
     });
 
-    const internalActions: InternalActions = TestBed.get(InternalActions);
+    const internalActions: InternalActions<IAction> = TestBed.get(InternalActions);
     const callsRecorded = <string[]>[];
 
     internalActions.subscribe(({ status }) => callsRecorded.push('1st Subscriber:' + status));

@@ -11,8 +11,8 @@ import { InternalStateOperations } from '../internal/state-operations';
  * @ignore
  */
 @Injectable()
-export class StateContextFactory {
-  constructor(private _internalStateOperations: InternalStateOperations) {}
+export class StateContextFactory<T> {
+  constructor(private _internalStateOperations: InternalStateOperations<T>) {}
 
   /**
    * Create the state context

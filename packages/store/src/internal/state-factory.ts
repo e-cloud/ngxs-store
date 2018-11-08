@@ -2,7 +2,7 @@ import { Injector, Injectable, SkipSelf, Optional } from '@angular/core';
 import { Observable, of, forkJoin, from, throwError } from 'rxjs';
 import { shareReplay, takeUntil, map, catchError, filter, mergeMap, defaultIfEmpty } from 'rxjs/operators';
 
-import { META_KEY, NgxsLifeCycle, NgxsConfig } from '../symbols';
+import { META_KEY, NgxsLifeCycle, NgxsConfig, IAction } from '../symbols';
 import {
   topologicalSort,
   buildGraph,
@@ -12,9 +12,10 @@ import {
   fastPropGetter,
   isObject,
   StateClass,
-  MappedStore
+  MappedStore,
+  StateClassStatic
 } from './internals';
-import { getActionTypeFromInstance, setValue } from '../utils/utils';
+import { getActionTypeFromInstanceOrClass, setValue } from '../utils/utils';
 import { ofActionDispatched } from '../operators/of-action';
 import { InternalActions, ActionStatus, ActionContext } from '../actions-stream';
 import { InternalDispatchedActionResults } from '../internal/dispatcher';
@@ -25,7 +26,7 @@ import { StateContextFactory } from '../internal/state-context-factory';
  * @ignore
  */
 @Injectable()
-export class StateFactory {
+export class StateFactory<T> {
   get states(): MappedStore[] {
     return this._parentFactory ? this._parentFactory.states : this._states;
   }
@@ -38,17 +39,17 @@ export class StateFactory {
     private _config: NgxsConfig,
     @Optional()
     @SkipSelf()
-    private _parentFactory: StateFactory,
-    private _actions: InternalActions,
+    private _parentFactory: StateFactory<T>,
+    private _actions: InternalActions<IAction>,
     private _actionResults: InternalDispatchedActionResults,
-    private _stateContextFactory: StateContextFactory
+    private _stateContextFactory: StateContextFactory<T>
   ) {}
 
   /**
    * Add a new state to the global defs.
    */
-  add(oneOrManyStateClasses: StateClass | StateClass[]): MappedStore[] {
-    let stateClasses: StateClass[];
+  add(oneOrManyStateClasses: StateClassStatic | StateClassStatic[]): MappedStore[] {
+    let stateClasses: StateClassStatic[];
     if (!Array.isArray(oneOrManyStateClasses)) {
       stateClasses = [oneOrManyStateClasses];
     } else {
@@ -69,15 +70,15 @@ export class StateFactory {
       }
 
       const depth = depths[name];
-      const { actions } = stateClass[META_KEY];
-      let { defaults } = stateClass[META_KEY];
+      const { actions } = stateClass[META_KEY]!;
+      let { defaults } = stateClass[META_KEY]!;
 
-      stateClass[META_KEY].path = depth;
+      stateClass[META_KEY]!.path = depth;
 
       if (this._config && this._config.compatibility && this._config.compatibility.strictContentSecurityPolicy) {
-        stateClass[META_KEY].selectFromAppState = compliantPropGetter(depth.split('.'));
+        stateClass[META_KEY]!.selectFromAppState = compliantPropGetter(depth.split('.'));
       } else {
-        stateClass[META_KEY].selectFromAppState = fastPropGetter(depth.split('.'));
+        stateClass[META_KEY]!.selectFromAppState = fastPropGetter(depth.split('.'));
       }
 
       // ensure our store hasn't already been added
@@ -114,7 +115,7 @@ export class StateFactory {
   /**
    * Add a set of states to the store and return the defaulsts
    */
-  addAndReturnDefaults(stateClasses: any[]): { defaults: any; states: MappedStore[] } {
+  addAndReturnDefaults(stateClasses: any[]): { defaults: any; states: MappedStore[] } | undefined {
     if (stateClasses) {
       const states = this.add(stateClasses);
       const defaults = states.reduce(
@@ -132,12 +133,12 @@ export class StateFactory {
     if (this._connected) return;
     this._actions
       .pipe(
-        filter((ctx: ActionContext) => ctx.status === ActionStatus.Dispatched),
+        filter((ctx: ActionContext<IAction>) => ctx.status === ActionStatus.Dispatched),
         mergeMap(({ action }) =>
-          this.invokeActions(this._actions, action).pipe(
-            map(() => <ActionContext>{ action, status: ActionStatus.Successful }),
-            defaultIfEmpty(<ActionContext>{ action, status: ActionStatus.Canceled }),
-            catchError(error => of(<ActionContext>{ action, status: ActionStatus.Errored, error }))
+          this.invokeActions(this._actions, action!).pipe(
+            map(() => <ActionContext<IAction>>{ action, status: ActionStatus.Successful }),
+            defaultIfEmpty(<ActionContext<IAction>>{ action, status: ActionStatus.Canceled }),
+            catchError(error => of(<ActionContext<IAction>>{ action, status: ActionStatus.Errored, error }))
           )
         )
       )
@@ -162,11 +163,11 @@ export class StateFactory {
   /**
    * Invoke actions on the states.
    */
-  invokeActions(actions$: InternalActions, action) {
+  invokeActions(actions$: InternalActions<IAction>, action: IAction) {
     const results = [];
 
     for (const metadata of this.states) {
-      const type = getActionTypeFromInstance(action);
+      const type = getActionTypeFromInstanceOrClass(action)!;
       const actionMetas = metadata.actions[type];
 
       if (actionMetas) {
@@ -182,7 +183,8 @@ export class StateFactory {
             if (result instanceof Observable) {
               result = result.pipe(
                 actionMeta.options.cancelUncompleted
-                  ? takeUntil(actions$.pipe(ofActionDispatched(action)))
+                  ? // todo: ofActionDispatched should be used with action class
+                    takeUntil(actions$.pipe(ofActionDispatched(action as any)))
                   : map(r => r)
               ); // map acts like a noop
             } else {

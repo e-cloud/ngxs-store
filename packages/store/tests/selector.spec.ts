@@ -15,7 +15,7 @@ describe('Selector', () => {
   })
   class MyState {
     @Selector()
-    static foo(state) {
+    static foo(state: any) {
       return state.foo;
     }
   }
@@ -29,19 +29,19 @@ describe('Selector', () => {
   })
   class MyState2 {
     @Selector([MyState.foo])
-    static foo(myState2, myStateFoo) {
+    static foo(myState2: any, myStateFoo: any) {
       return myState2.foo + myStateFoo;
     }
 
     @Selector([MyState2.foo])
-    static fooBar(myState2, foo) {
+    static fooBar(myState2: any, foo: any) {
       return foo + myState2.bar;
     }
   }
 
   class MetaSelector {
     @Selector([MyState.foo])
-    static foo(myState) {
+    static foo(myState: any) {
       return myState;
     }
   }
@@ -52,7 +52,7 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const slice = store.selectSnapshot(MyState.foo);
       expect(slice).toBe('Hello');
     }));
@@ -62,7 +62,7 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const slice = store.selectSnapshot(MetaSelector.foo);
       expect(slice).toBe('Hello');
     }));
@@ -72,7 +72,7 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const myState = store.selectSnapshot(<any>MyState);
       const slice = MyState.foo(myState);
       expect(slice).toBe('Hello');
@@ -83,7 +83,7 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState, MyState2])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const slice = store.selectSnapshot(MyState2.foo);
       expect(slice).toBe('HelloHello');
     }));
@@ -93,14 +93,14 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState, MyState2])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const slice = store.selectSnapshot(MyState2.fooBar);
       expect(slice).toBe('HelloHelloWorld');
     }));
 
     describe('(memoization)', () => {
       it('should memoize the last result', async(() => {
-        const selectorCalls = [];
+        const selectorCalls: string[] = [];
 
         @State<any>({
           name: 'counter',
@@ -111,13 +111,13 @@ describe('Selector', () => {
         })
         class TestState {
           @Selector()
-          static foo(state) {
+          static foo(state: any) {
             selectorCalls.push('foo');
             return state.foo;
           }
 
           @Selector()
-          static bar(state) {
+          static bar(state: any) {
             selectorCalls.push('bar');
             return state.bar;
           }
@@ -127,7 +127,7 @@ describe('Selector', () => {
           imports: [NgxsModule.forRoot([TestState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
         store.selectSnapshot(TestState.foo);
         store.selectSnapshot(TestState.foo);
         store.selectSnapshot(TestState.bar);
@@ -137,7 +137,7 @@ describe('Selector', () => {
       }));
 
       it('should memoize the last result of an inner function', async(() => {
-        const selectorCalls = [];
+        const selectorCalls: string[] = [];
 
         @State<any>({
           name: 'counter',
@@ -148,7 +148,7 @@ describe('Selector', () => {
         })
         class TestState {
           @Selector()
-          static foo(state) {
+          static foo(state: any) {
             selectorCalls.push('foo[outer]');
             return () => {
               selectorCalls.push('foo[inner]');
@@ -161,7 +161,7 @@ describe('Selector', () => {
           imports: [NgxsModule.forRoot([TestState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
         store.selectSnapshot(TestState.foo);
         store.selectSnapshot(TestState.foo)();
         const fn = store.selectSnapshot(TestState.foo);
@@ -179,8 +179,8 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
-      const selector = createSelector([MyState], state => state.foo);
+      const store: Store<any> = TestBed.get(Store);
+      const selector = createSelector([MyState], (state: any) => state.foo);
       const slice = store.selectSnapshot(selector);
       expect(slice).toBe('Hello');
     }));
@@ -190,8 +190,8 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
-      const selector = createSelector([MyState.foo], state => state);
+      const store: Store<any> = TestBed.get(Store);
+      const selector = createSelector([MyState.foo], (state: any) => state);
       const slice = store.selectSnapshot(selector);
       expect(slice).toBe('Hello');
     }));
@@ -201,9 +201,9 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState])]
       });
 
-      const store: Store = TestBed.get(Store);
+      const store: Store<any> = TestBed.get(Store);
       const myState = store.selectSnapshot(<any>MyState);
-      const selector = createSelector([MyState], state => state.foo);
+      const selector = createSelector([MyState], (state: any) => state.foo);
       const slice = selector(myState);
       expect(slice).toBe('Hello');
     }));
@@ -213,15 +213,15 @@ describe('Selector', () => {
         imports: [NgxsModule.forRoot([MyState, MyState2])]
       });
 
-      const store: Store = TestBed.get(Store);
-      const selector = createSelector([MyState, MyState.foo], (state, foo) => state.foo + foo);
+      const store: Store<any> = TestBed.get(Store);
+      const selector: any = createSelector([MyState, MyState.foo], (state: any, foo: any) => state.foo + foo);
       const slice = store.selectSnapshot(selector);
       expect(slice).toBe('HelloHello');
     }));
 
     describe('(memoization)', () => {
       it('should memoize the last result', async(() => {
-        const selectorCalls = [];
+        const selectorCalls: string[] = [];
 
         @State<any>({
           name: 'counter',
@@ -236,13 +236,13 @@ describe('Selector', () => {
           imports: [NgxsModule.forRoot([TestState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
-        const fooSelector = createSelector([TestState], state => {
+        const fooSelector = createSelector([TestState], (state: any) => {
           selectorCalls.push('foo');
           return state.foo;
         });
-        const barSelector = createSelector([TestState], state => {
+        const barSelector = createSelector([TestState], (state: any) => {
           selectorCalls.push('bar');
           return state.bar;
         });
@@ -255,7 +255,7 @@ describe('Selector', () => {
       }));
 
       it('should memoize the last result of an inner function', async(() => {
-        const selectorCalls = [];
+        const selectorCalls: string[] = [];
 
         @State<any>({
           name: 'counter',
@@ -270,8 +270,8 @@ describe('Selector', () => {
           imports: [NgxsModule.forRoot([TestState])]
         });
 
-        const store: Store = TestBed.get(Store);
-        const fooSelector = createSelector([TestState], state => {
+        const store: Store<any> = TestBed.get(Store);
+        const fooSelector = createSelector([TestState], (state: any) => {
           selectorCalls.push('foo[outer]');
           return () => {
             selectorCalls.push('foo[inner]');

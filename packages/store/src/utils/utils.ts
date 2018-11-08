@@ -1,24 +1,30 @@
+import { IAction, ActionType, StaticAction, PlainObjectAction } from '../symbols';
+
 /**
- * Returns the type from an action instance.
+ * Returns the type from an action instance/class.
  * @ignore
  */
-export function getActionTypeFromInstance(action: any): string {
-  if (action.constructor && action.constructor.type) {
-    return action.constructor.type;
+export function getActionTypeFromInstanceOrClass(action: IAction): string | undefined {
+  if ((<StaticAction>action).constructor && (<StaticAction>action).constructor.type) {
+    return (<StaticAction>action).constructor.type;
   }
 
-  return action.type;
+  return (<PlainObjectAction>action).type;
+}
+
+export function getActionTypeFromClass<T = any>(actionClass: ActionType<T>): string {
+  return actionClass.type;
 }
 
 /**
  * Matches a action
  * @ignore
  */
-export function actionMatcher(action1: any) {
-  const type1 = getActionTypeFromInstance(action1);
+export function actionMatcher(action1: IAction) {
+  const type1 = getActionTypeFromInstanceOrClass(action1);
 
-  return function(action2: any) {
-    return type1 === getActionTypeFromInstance(action2);
+  return function(action2: IAction) {
+    return type1 === getActionTypeFromInstanceOrClass(action2);
   };
 }
 
@@ -42,7 +48,7 @@ export const setValue = (obj: any, prop: string, val: any) => {
     if (index === lastIndex) {
       acc[part] = val;
     } else {
-      acc[part] = Array.isArray(acc[part]) ? [ ...acc[part] ] : { ...acc[part] };
+      acc[part] = Array.isArray(acc[part]) ? [...acc[part]] : { ...acc[part] };
     }
 
     return acc && acc[part];

@@ -6,7 +6,7 @@ import { takeUntil, debounceTime, first } from 'rxjs/operators';
 import { UpdateFormStatus, UpdateFormValue, UpdateFormDirty, UpdateFormErrors, UpdateForm } from './actions';
 
 @Directive({ selector: '[ngxsForm]' })
-export class FormDirective implements OnInit, OnDestroy {
+export class FormDirective<T> implements OnInit, OnDestroy {
   @Input('ngxsForm') path: string;
   @Input('ngxsFormDebounce') debounce = 100;
   @Input('ngxsFormClearOnDestroy') clearDestroy: boolean;
@@ -14,7 +14,11 @@ export class FormDirective implements OnInit, OnDestroy {
   private _destroy$ = new Subject<null>();
   private _updating = false;
 
-  constructor(private _store: Store, private _formGroupDirective: FormGroupDirective, private _cd: ChangeDetectorRef) {}
+  constructor(
+    private _store: Store<T>,
+    private _formGroupDirective: FormGroupDirective,
+    private _cd: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this._store
@@ -30,7 +34,10 @@ export class FormDirective implements OnInit, OnDestroy {
     // On first state change, sync form model, status and dirty with state
     this._store
       .select(state => getValue(state, `${this.path}`))
-      .pipe(takeUntil(this._destroy$), first())
+      .pipe(
+        takeUntil(this._destroy$),
+        first()
+      )
       .subscribe(state => {
         this._store.dispatch([
           new UpdateFormValue({
@@ -78,32 +85,40 @@ export class FormDirective implements OnInit, OnDestroy {
         }
       });
 
-    this._formGroupDirective.valueChanges.pipe(debounceTime(this.debounce), takeUntil(this._destroy$)).subscribe(() => {
-      const value = this._formGroupDirective.control.getRawValue();
-      this._updating = true;
-      this._store
-        .dispatch([
-          new UpdateFormValue({
-            path: this.path,
-            value
-          }),
-          new UpdateFormDirty({
-            path: this.path,
-            dirty: this._formGroupDirective.dirty
-          }),
-          new UpdateFormErrors({
-            path: this.path,
-            errors: this._formGroupDirective.errors
-          })
-        ])
-        .subscribe({
-          error: () => (this._updating = false),
-          complete: () => (this._updating = false)
-        });
-    });
+    this._formGroupDirective
+      .valueChanges!.pipe(
+        debounceTime(this.debounce),
+        takeUntil(this._destroy$)
+      )
+      .subscribe(() => {
+        const value = this._formGroupDirective.control.getRawValue();
+        this._updating = true;
+        this._store
+          .dispatch([
+            new UpdateFormValue({
+              path: this.path,
+              value
+            }),
+            new UpdateFormDirty({
+              path: this.path,
+              dirty: this._formGroupDirective.dirty
+            }),
+            new UpdateFormErrors({
+              path: this.path,
+              errors: this._formGroupDirective.errors
+            })
+          ])
+          .subscribe({
+            error: () => (this._updating = false),
+            complete: () => (this._updating = false)
+          });
+      });
 
-    this._formGroupDirective.statusChanges
-      .pipe(debounceTime(this.debounce), takeUntil(this._destroy$))
+    this._formGroupDirective
+      .statusChanges!.pipe(
+        debounceTime(this.debounce),
+        takeUntil(this._destroy$)
+      )
       .subscribe((status: string) => {
         this._store.dispatch(
           new UpdateFormStatus({

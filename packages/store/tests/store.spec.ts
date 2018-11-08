@@ -5,6 +5,7 @@ import { Store } from '../src/store';
 import { NgxsModule } from '../src/module';
 import { State } from '../src/decorators/state';
 import { Action } from '../src/decorators/action';
+import { StateContext } from '../src/symbols';
 
 describe('Store', () => {
   interface SubSubStateModel {
@@ -55,9 +56,9 @@ describe('Store', () => {
   })
   class MyState {
     @Action(FooIt)
-    fooIt({ setState }) {
+    fooIt({ setState }: StateContext<StateModel>) {
       return new Observable(observer => {
-        setState({ foo: 'bar' });
+        setState({ foo: 'bar' } as any);
 
         observer.next();
         observer.complete();
@@ -65,7 +66,7 @@ describe('Store', () => {
     }
   }
 
-  let store: Store;
+  let store: Store<any>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -76,7 +77,7 @@ describe('Store', () => {
   });
 
   it('should subscribe to the root state', async(() => {
-    store.subscribe(state => {
+    store.subscribe((state: any) => {
       expect(state).toEqual({
         foo: {
           first: 'Hello',
@@ -94,9 +95,11 @@ describe('Store', () => {
   }));
 
   it('should select the correct state use a function', async(() => {
-    store.select((state: { foo: StateModel }) => state.foo.first).subscribe(state => {
-      expect(state).toBe('Hello');
-    });
+    store
+      .select((state: { foo: StateModel }) => state.foo.first)
+      .subscribe(state => {
+        expect(state).toBe('Hello');
+      });
   }));
 
   it('should select the correct state use a state class: Root State', async(() => {
@@ -116,7 +119,7 @@ describe('Store', () => {
   }));
 
   it('should select the correct state use a state class: Sub State', async(() => {
-    store.select(MySubState).subscribe((state: SubStateModel) => {
+    store.select<SubStateModel>(MySubState).subscribe((state: SubStateModel) => {
       expect(state).toEqual({
         hello: true,
         world: true,
@@ -128,7 +131,7 @@ describe('Store', () => {
   }));
 
   it('should select the correct state use a state class: Sub Sub State', async(() => {
-    store.select(MySubSubState).subscribe((state: SubSubStateModel) => {
+    store.select<SubSubStateModel>(MySubSubState).subscribe((state: SubSubStateModel) => {
       expect(state).toEqual({
         name: 'Danny'
       });

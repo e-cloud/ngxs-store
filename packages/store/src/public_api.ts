@@ -17,7 +17,17 @@ export {
   ofActionCanceled,
   ofActionErrored
 } from './operators/of-action';
-export { NgxsPlugin, NgxsPluginFn, StateContext, NgxsOnInit } from './symbols';
+export {
+  NgxsPlugin,
+  NgxsPluginFn,
+  StateContext,
+  NgxsOnInit,
+  StoreOptions,
+  NgxsLifeCycle,
+  NgxsConfig,
+  ISelector,
+  IAction
+} from './symbols';
 export { Selector } from './decorators/selector';
-export { getActionTypeFromInstance, actionMatcher } from './utils/utils';
+export { getActionTypeFromInstanceOrClass, actionMatcher } from './utils/utils';
 export { createSelector } from './utils/selector-utils';

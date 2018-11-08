@@ -13,9 +13,9 @@ export const enum ActionStatus {
   Errored = 'ERRORED'
 }
 
-export interface ActionContext {
+export interface ActionContext<T> {
   status: ActionStatus;
-  action: any;
+  action: T | null;
   error?: Error;
 }
 
@@ -40,7 +40,7 @@ export class OrderedSubject<T> extends Subject<T> {
 
   next(value?: T): void {
     if (this._busyPushingNext) {
-      this._itemQueue.unshift(value);
+      this._itemQueue.unshift(value!);
       return;
     }
     this._busyPushingNext = true;
@@ -57,7 +57,7 @@ export class OrderedSubject<T> extends Subject<T> {
  * Internal Action stream that is emitted anytime an action is dispatched.
  */
 @Injectable()
-export class InternalActions extends OrderedSubject<ActionContext> {}
+export class InternalActions<T> extends OrderedSubject<ActionContext<T>> {}
 
 /**
  * Action stream that is emitted anytime an action is dispatched.
@@ -65,8 +65,8 @@ export class InternalActions extends OrderedSubject<ActionContext> {}
  * You can listen to this in services to react without stores.
  */
 @Injectable()
-export class Actions extends Observable<any> {
-  constructor(actions$: InternalActions, ngZone: NgZone) {
+export class Actions<T> extends Observable<any> {
+  constructor(actions$: InternalActions<T>, ngZone: NgZone) {
     super(observer => {
       actions$
         .pipe(enterZone(ngZone))

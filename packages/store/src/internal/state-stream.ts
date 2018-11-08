@@ -6,8 +6,8 @@ import { BehaviorSubject } from 'rxjs';
  * @ignore
  */
 @Injectable()
-export class StateStream extends BehaviorSubject<any> {
+export class StateStream<T> extends BehaviorSubject<Partial<T>> {
   constructor() {
-    super({});
+    super({} as any);
   }
 }

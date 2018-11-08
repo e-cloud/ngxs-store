@@ -20,7 +20,7 @@ describe('Dispatch', () => {
   }
 
   it('should throw error', async(() => {
-    const observedCalls = [];
+    const observedCalls: string[] = [];
 
     @State<number>({
       name: 'counter',
@@ -50,7 +50,7 @@ describe('Dispatch', () => {
       ]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store.dispatch(new Increment()).subscribe(() => {}, err => observedCalls.push('observer.error(...)'));
 
@@ -73,7 +73,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState]), NgxsModule.forFeature([])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
     const zone: NgZone = TestBed.get(NgZone);
     zone.run(() => {
       expect(NgZone.isInAngularZone()).toBe(true);
@@ -105,7 +105,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState]), NgxsModule.forFeature([])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
     store.dispatch(new Increment()).subscribe(spy2);
 
     store.select(MyState).subscribe(res => {
@@ -139,7 +139,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store.dispatch(new Increment());
     store.dispatch(new Increment());
@@ -177,7 +177,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store.dispatch(new Increment());
     store.dispatch(new Increment());
@@ -213,7 +213,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store.dispatch([new Increment()]).subscribe(() => {
       store.selectOnce(MyState).subscribe(res => {
@@ -248,7 +248,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store
       .select(MyState)
@@ -282,7 +282,7 @@ describe('Dispatch', () => {
       imports: [NgxsModule.forRoot([MyState])]
     });
 
-    const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
     store.dispatch([
       new Increment(),
@@ -323,7 +323,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(1);
@@ -353,7 +353,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(2);
@@ -380,7 +380,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(1);
@@ -410,7 +410,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(2);
@@ -429,7 +429,10 @@ describe('Dispatch', () => {
         class MyState {
           @Action(Increment)
           increment({ getState, setState, dispatch }: StateContext<number>) {
-            return of({}).pipe(delay(1), tap(() => actionsHandled++));
+            return of({}).pipe(
+              delay(1),
+              tap(() => actionsHandled++)
+            );
           }
         }
 
@@ -437,7 +440,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(1);
@@ -454,12 +457,18 @@ describe('Dispatch', () => {
         class MyState {
           @Action(Increment)
           increment({ getState, setState, dispatch }: StateContext<number>) {
-            return of({}).pipe(delay(1), tap(() => actionsHandled++));
+            return of({}).pipe(
+              delay(1),
+              tap(() => actionsHandled++)
+            );
           }
 
           @Action(Increment)
           incrementAgain({ getState, setState, dispatch }: StateContext<number>) {
-            return of({}).pipe(delay(2), tap(() => actionsHandled++));
+            return of({}).pipe(
+              delay(2),
+              tap(() => actionsHandled++)
+            );
           }
         }
 
@@ -467,7 +476,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(2);
@@ -496,7 +505,10 @@ describe('Dispatch', () => {
 
           @Action(Increment)
           incrementObservable({ getState, setState, dispatch }: StateContext<number>) {
-            return of({}).pipe(delay(2), tap(() => actionsHandled++));
+            return of({}).pipe(
+              delay(2),
+              tap(() => actionsHandled++)
+            );
           }
         }
 
@@ -504,7 +516,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Increment()).subscribe(() => {
           expect(actionsHandled).toEqual(3);
@@ -529,7 +541,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         let subscriptionCalled = false;
         store.dispatch(new Increment()).subscribe(() => {
@@ -552,7 +564,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
         let subscriptionCalled = false;
         store.dispatch(new Increment()).subscribe(() => (subscriptionCalled = true));
 
@@ -561,87 +573,81 @@ describe('Dispatch', () => {
     });
 
     describe('when the action is canceled by a subsequent action', () => {
-      it(
-        'should not trigger observer, but should complete observable stream',
-        fakeAsync(() => {
-          const resolvers: (() => void)[] = [];
+      it('should not trigger observer, but should complete observable stream', fakeAsync(() => {
+        const resolvers: (() => void)[] = [];
 
-          @State<number>({
-            name: 'counter',
-            defaults: 0
-          })
-          class MyState {
-            @Action(Increment, { cancelUncompleted: true })
-            increment({ getState, setState, dispatch }: StateContext<number>) {
-              return new Promise<void>(resolve => resolvers.push(resolve));
-            }
-          }
-
-          TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot([MyState])]
-          });
-
-          const store: Store = TestBed.get(Store);
-
-          const subscriptionsCalled: string[] = [];
-          store
-            .dispatch(new Increment())
-            .subscribe(
-              () => subscriptionsCalled.push('previous'),
-              () => subscriptionsCalled.push('previous error'),
-              () => subscriptionsCalled.push('previous complete')
-            );
-          store.dispatch(new Increment());
-          resolvers[0]();
-          resolvers[1]();
-          tick(0);
-          expect(subscriptionsCalled).toEqual(['previous complete']);
+        @State<number>({
+          name: 'counter',
+          defaults: 0
         })
-      );
-
-      it(
-        'should trigger next and completion for latest but only completion for previous',
-        fakeAsync(() => {
-          const resolvers: (() => void)[] = [];
-
-          @State<number>({
-            name: 'counter',
-            defaults: 0
-          })
-          class MyState {
-            @Action(Increment, { cancelUncompleted: true })
-            increment({ getState, setState, dispatch }: StateContext<number>) {
-              return new Promise<void>(resolve => resolvers.push(resolve));
-            }
+        class MyState {
+          @Action(Increment, { cancelUncompleted: true })
+          increment({ getState, setState, dispatch }: StateContext<number>) {
+            return new Promise<void>(resolve => resolvers.push(resolve));
           }
+        }
 
-          TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot([MyState])]
-          });
+        TestBed.configureTestingModule({
+          imports: [NgxsModule.forRoot([MyState])]
+        });
 
-          const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
-          const subscriptionsCalled: string[] = [];
-          store
-            .dispatch(new Increment())
-            .subscribe(
-              () => subscriptionsCalled.push('previous'),
-              () => subscriptionsCalled.push('previous error'),
-              () => subscriptionsCalled.push('previous complete')
-            );
-          store
-            .dispatch(new Increment())
-            .subscribe(
-              () => subscriptionsCalled.push('latest'),
-              () => subscriptionsCalled.push('latest error'),
-              () => subscriptionsCalled.push('latest complete')
-            );
-          resolvers[0]();
-          resolvers[1]();
-          tick(0);
-          expect(subscriptionsCalled).toEqual(['previous complete', 'latest', 'latest complete']);
+        const subscriptionsCalled: string[] = [];
+        store
+          .dispatch(new Increment())
+          .subscribe(
+            () => subscriptionsCalled.push('previous'),
+            () => subscriptionsCalled.push('previous error'),
+            () => subscriptionsCalled.push('previous complete')
+          );
+        store.dispatch(new Increment());
+        resolvers[0]();
+        resolvers[1]();
+        tick(0);
+        expect(subscriptionsCalled).toEqual(['previous complete']);
+      }));
+
+      it('should trigger next and completion for latest but only completion for previous', fakeAsync(() => {
+        const resolvers: (() => void)[] = [];
+
+        @State<number>({
+          name: 'counter',
+          defaults: 0
         })
-      );
+        class MyState {
+          @Action(Increment, { cancelUncompleted: true })
+          increment({ getState, setState, dispatch }: StateContext<number>) {
+            return new Promise<void>(resolve => resolvers.push(resolve));
+          }
+        }
+
+        TestBed.configureTestingModule({
+          imports: [NgxsModule.forRoot([MyState])]
+        });
+
+        const store: Store<any> = TestBed.get(Store);
+
+        const subscriptionsCalled: string[] = [];
+        store
+          .dispatch(new Increment())
+          .subscribe(
+            () => subscriptionsCalled.push('previous'),
+            () => subscriptionsCalled.push('previous error'),
+            () => subscriptionsCalled.push('previous complete')
+          );
+        store
+          .dispatch(new Increment())
+          .subscribe(
+            () => subscriptionsCalled.push('latest'),
+            () => subscriptionsCalled.push('latest error'),
+            () => subscriptionsCalled.push('latest complete')
+          );
+        resolvers[0]();
+        resolvers[1]();
+        tick(0);
+        expect(subscriptionsCalled).toEqual(['previous complete', 'latest', 'latest complete']);
+      }));
     });
 
     describe('when the action returns an observable error', () => {
@@ -662,7 +668,7 @@ describe('Dispatch', () => {
           providers: [{ provide: ErrorHandler, useClass: NoopErrorHandler }]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         const subscriptionsCalled: string[] = [];
         store
@@ -694,7 +700,7 @@ describe('Dispatch', () => {
           providers: [{ provide: ErrorHandler, useClass: NoopErrorHandler }]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         const subscriptionsCalled: string[] = [];
         store
@@ -722,7 +728,10 @@ describe('Dispatch', () => {
         class MyState {
           @Action(Append)
           append({ getState, setState }: StateContext<string>, { payload }: Append) {
-            return of({}).pipe(delay(payload.length * 10), tap(() => setState(getState() + payload)));
+            return of({}).pipe(
+              delay(payload.length * 10),
+              tap(() => setState(getState() + payload))
+            );
           }
         }
 
@@ -730,7 +739,7 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store.dispatch(new Append('dddd')).subscribe(state => expect(state.text).toEqual('abbcccdddd'));
         store.dispatch(new Append('a')).subscribe(state => expect(state.text).toEqual('a'));
@@ -753,7 +762,10 @@ describe('Dispatch', () => {
         class MyState {
           @Action(Append)
           append({ getState, setState }: StateContext<string>, { payload }: Append) {
-            return of({}).pipe(delay(payload.length * 10), tap(() => setState(getState() + payload)));
+            return of({}).pipe(
+              delay(payload.length * 10),
+              tap(() => setState(getState() + payload))
+            );
           }
         }
 
@@ -761,12 +773,12 @@ describe('Dispatch', () => {
           imports: [NgxsModule.forRoot([MyState])]
         });
 
-        const store: Store = TestBed.get(Store);
+        const store: Store<any> = TestBed.get(Store);
 
         store
           .dispatch([new Append('dddd'), new Append('a'), new Append('ccc'), new Append('bb')])
           .subscribe(results => {
-            expect(results.map(r => r.text)).toEqual(['abbcccdddd', 'a', 'abbccc', 'abb']);
+            expect(results.map((r: any) => r.text)).toEqual(['abbcccdddd', 'a', 'abbccc', 'abb']);
           });
       }));
     });

@@ -9,6 +9,7 @@ import { Selector } from '../src/decorators/selector';
 import { State } from '../src/decorators/state';
 import { Action } from '../src/decorators/action';
 import { last, first } from 'rxjs/operators';
+import { StateContext } from '../src/symbols';
 
 describe('Select', () => {
   interface SubSubStateModel {
@@ -23,7 +24,7 @@ describe('Select', () => {
 
   interface StateModel {
     foo: string;
-    bar: string;
+    bar?: string;
     subProperty?: SubStateModel;
   }
 
@@ -59,7 +60,7 @@ describe('Select', () => {
   })
   class MyState {
     @Action(FooIt)
-    fooIt({ setState }) {
+    fooIt({ setState }: StateContext<StateModel>) {
       setState({ foo: 'bar' });
     }
   }
@@ -163,7 +164,7 @@ describe('Select', () => {
       @Select(state => state.counter.foo)
       counter$: Observable<string>;
 
-      constructor(store: Store) {
+      constructor(store: Store<any>) {
         setTimeout(() => {
           store.dispatch(new FooIt());
         }, 100);

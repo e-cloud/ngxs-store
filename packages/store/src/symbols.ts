@@ -48,12 +48,12 @@ export interface StateContext<T> {
   /**
    * Reset the state to a new value.
    */
-  setState(val: T);
+  setState(val: T): T;
 
   /**
    * Patch the existing state with the provided value.
    */
-  patchState(val: Partial<T>);
+  patchState(val: Partial<T>): T;
 
   /**
    * Dispatch a new action and return the dispatched observable.
@@ -111,3 +111,25 @@ export interface NgxsOnInit {
 }
 
 export type NgxsLifeCycle = Partial<NgxsOnInit>;
+
+export interface Type<T> extends Function {
+  new (...args: any[]): T;
+}
+
+export interface ActionType<T> extends Type<T> {
+  type: string;
+}
+
+export type IAnySelector<T> = (state: T) => T[keyof T];
+
+export type ISelector<T, V> = (state: T) => V;
+
+export interface StaticAction {
+  constructor: ActionType<IAction>;
+}
+
+export interface PlainObjectAction {
+  type: string;
+}
+
+export type IAction = StaticAction | PlainObjectAction;

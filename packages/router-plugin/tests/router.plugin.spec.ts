@@ -18,7 +18,7 @@ describe('NgxsRouterPlugin', () => {
     await router.navigateByUrl('/');
 
     expect(log).toEqual([
-      { type: 'url', state: null }, // init event. has nothing to do with the router
+      { type: 'url', state: undefined }, // init event. has nothing to do with the router
       { type: 'router', event: 'NavigationStart', url: '/' },
       { type: 'router', event: 'RoutesRecognized', url: '/' },
       { type: 'url', state: '/' }, // RouterNavigation event in the store
@@ -46,40 +46,34 @@ describe('NgxsRouterPlugin', () => {
     ]);
   }));
 
-  it(
-    'should select router state',
-    fakeAsync(async () => {
-      createTestModule();
+  it('should select router state', fakeAsync(async () => {
+    createTestModule();
 
-      const router: Router = TestBed.get(Router);
-      const store: Store = TestBed.get(Store);
+    const router: Router = TestBed.get(Router);
+    const store: Store<any> = TestBed.get(Store);
 
-      await router.navigateByUrl('/testpath');
-      tick();
+    await router.navigateByUrl('/testpath');
+    tick();
 
-      const routerState = store.selectSnapshot(RouterState.state);
-      expect(routerState.url).toEqual('/testpath');
+    const routerState = store.selectSnapshot(RouterState.state)!;
+    expect(routerState.url).toEqual('/testpath');
 
-      const routerUrl = store.selectSnapshot(RouterState.url);
-      expect(routerUrl).toEqual('/testpath');
-    })
-  );
+    const routerUrl = store.selectSnapshot(RouterState.url);
+    expect(routerUrl).toEqual('/testpath');
+  }));
 
-  it(
-    'should handle Navigate action',
-    fakeAsync(async () => {
-      createTestModule();
+  it('should handle Navigate action', fakeAsync(async () => {
+    createTestModule();
 
-      const store: Store = TestBed.get(Store);
+    const store: Store<any> = TestBed.get(Store);
 
-      store.dispatch(new Navigate(['a-path']));
-      tick();
+    store.dispatch(new Navigate(['a-path']));
+    tick();
 
-      store.select(RouterState.state).subscribe(routerState => {
-        expect(routerState.url).toEqual('/a-path');
-      });
-    })
-  );
+    store.select(RouterState.state).subscribe(routerState => {
+      expect(routerState!.url).toEqual('/a-path');
+    });
+  }));
 });
 
 function createTestModule(
@@ -141,7 +135,7 @@ function createTestModule(
   TestBed.createComponent(AppCmp);
 }
 
-function logOfRouterAndStore(router: Router, store: Store): any[] {
+function logOfRouterAndStore(router: Router, store: Store<any>): any[] {
   const log: any[] = [];
   router.events.subscribe(e => {
     if (e.hasOwnProperty('url')) {

@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { StateOperations } from '../internal/internals';
 import { InternalDispatcher } from '../internal/dispatcher';
 import { StateStream } from './state-stream';
-import { NgxsConfig } from '../symbols';
+import { NgxsConfig, IAction } from '../symbols';
 import { deepFreeze } from '../utils/freeze';
 
 /**
@@ -11,11 +11,10 @@ import { deepFreeze } from '../utils/freeze';
  * @ignore
  */
 @Injectable()
-export class InternalStateOperations {
-
+export class InternalStateOperations<T> {
   constructor(
-    private _stateStream: StateStream,
-    private _dispatcher: InternalDispatcher,
+    private _stateStream: StateStream<T>,
+    private _dispatcher: InternalDispatcher<T>,
     private _config: NgxsConfig
   ) {
     this.checkDevelopmentMode();
@@ -27,8 +26,8 @@ export class InternalStateOperations {
   getRootStateOperations(): StateOperations<any> {
     const rootStateOperations = {
       getState: () => this._stateStream.getValue(),
-      setState: newState => this._stateStream.next(newState),
-      dispatch: actions => this._dispatcher.dispatch(actions)
+      setState: (newState: any) => this._stateStream.next(newState),
+      dispatch: (actions: IAction[]) => this._dispatcher.dispatch(actions)
     };
 
     if (this._config.developmentMode) {

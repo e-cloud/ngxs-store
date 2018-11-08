@@ -17,7 +17,7 @@ export class MathService {
   }
 }
 
-@State({
+@State<number>({
   name: 'counter',
   defaults: 0
 })

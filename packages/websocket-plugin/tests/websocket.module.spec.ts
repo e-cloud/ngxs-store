@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { NgxsModule, Actions, ofAction, Store } from '@ngxs/store';
+import { NgxsModule, Actions, ofAction, Store, IAction } from '@ngxs/store';
 import { NgxsWebsocketPluginModule, ConnectWebSocket, SendWebSocketMessage } from '../';
 import { Server, WebSocket } from 'mock-socket';
 import { take } from 'rxjs/operators';
@@ -15,8 +15,8 @@ describe('NgxsWebsocketPlugin', () => {
   };
 
   const SOCKET_URL = 'ws://localhost:8400/websock';
-  let store: Store;
-  let actions$: Actions;
+  let store: Store<any>;
+  let actions$: Actions<IAction>;
 
   beforeEach(() => {
     (<any>window).WebSocket = WebSocket;
@@ -36,14 +36,19 @@ describe('NgxsWebsocketPlugin', () => {
 
   it('should forward socket message to store', done => {
     const mockServer = new Server(SOCKET_URL);
-    mockServer.on('message', data => mockServer.send(data));
+    mockServer.on('message', (data: any) => mockServer.send(data));
 
     store.dispatch(new ConnectWebSocket());
     store.dispatch(createMessage());
 
-    actions$.pipe(ofAction(SetMessage), take(1)).subscribe(({ payload }) => {
-      expect(payload).toBe('from websocket');
-      mockServer.stop(done);
-    });
+    actions$
+      .pipe(
+        ofAction(SetMessage),
+        take(1)
+      )
+      .subscribe(({ payload }) => {
+        expect(payload).toBe('from websocket');
+        mockServer.stop(done);
+      });
   });
 });

@@ -7,6 +7,7 @@ import { InternalActions, ActionStatus, ActionContext } from '../actions-stream'
 import { StateStream } from './state-stream';
 import { PluginManager } from '../plugin-manager';
 import { enterZone } from '../operators/zone';
+import { IAction } from '../symbols';
 
 /**
  * Internal Action result stream that is emitted when an action is completed.
@@ -15,28 +16,28 @@ import { enterZone } from '../operators/zone';
  * The dispatcher then asynchronously pushes the result from this stream onto the main action stream as a result.
  */
 @Injectable()
-export class InternalDispatchedActionResults extends Subject<ActionContext> {}
+export class InternalDispatchedActionResults extends Subject<ActionContext<IAction>> {}
 
 @Injectable()
-export class InternalDispatcher {
+export class InternalDispatcher<T> {
   constructor(
     private _errorHandler: ErrorHandler,
-    private _actions: InternalActions,
+    private _actions: InternalActions<IAction>,
     private _actionResults: InternalDispatchedActionResults,
     private _pluginManager: PluginManager,
-    private _stateStream: StateStream,
+    private _stateStream: StateStream<T>,
     private _ngZone: NgZone
   ) {}
 
   /**
    * Dispatches event(s).
    */
-  dispatch(event: any | any[]): Observable<any> {
+  dispatch(actionOrActions: IAction | IAction[]): Observable<any> {
     const result: Observable<any> = this._ngZone.runOutsideAngular(() => {
-      if (Array.isArray(event)) {
-        return forkJoin(event.map(a => this.dispatchSingle(a)));
+      if (Array.isArray(actionOrActions)) {
+        return forkJoin(actionOrActions.map(a => this.dispatchSingle(a)));
       } else {
-        return this.dispatchSingle(event);
+        return this.dispatchSingle(actionOrActions);
       }
     });
 
@@ -47,13 +48,13 @@ export class InternalDispatcher {
     return result.pipe(enterZone(this._ngZone));
   }
 
-  private dispatchSingle(action: any): Observable<any> {
+  private dispatchSingle(action: IAction): Observable<any> {
     const prevState = this._stateStream.getValue();
     const plugins = this._pluginManager.plugins;
 
     return (compose([
       ...plugins,
-      (nextState, nextAction) => {
+      (nextState: any, nextAction: IAction) => {
         if (nextState !== prevState) {
           this._stateStream.next(nextState);
         }
@@ -65,18 +66,18 @@ export class InternalDispatcher {
     ])(prevState, action) as Observable<any>).pipe(shareReplay());
   }
 
-  private getActionResultStream(action: any): Observable<ActionContext> {
+  private getActionResultStream(action: IAction): Observable<ActionContext<IAction>> {
     return this._actionResults.pipe(
-      filter((ctx: ActionContext) => ctx.action === action && ctx.status !== ActionStatus.Dispatched),
+      filter((ctx: ActionContext<IAction>) => ctx.action === action && ctx.status !== ActionStatus.Dispatched),
       take(1),
       shareReplay()
     );
   }
 
-  private createDispatchObservable(actionResult$: Observable<ActionContext>): Observable<any> {
+  private createDispatchObservable(actionResult$: Observable<ActionContext<IAction>>): Observable<any> {
     return actionResult$
       .pipe(
-        exhaustMap((ctx: ActionContext) => {
+        exhaustMap((ctx: ActionContext<IAction>) => {
           switch (ctx.status) {
             case ActionStatus.Successful:
               return of(this._stateStream.getValue());
